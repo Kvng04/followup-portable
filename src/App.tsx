@@ -1244,12 +1244,9 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!user) {
-      setLeads([])
-      return
+    if (user) {
+      loadLeads()
     }
-
-    loadLeads()
   }, [user])
 
   async function loadLeads() {
@@ -1313,7 +1310,8 @@ function App() {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
-    setActivePage('dashboard')
+    setLeads([])
+   setActivePage('dashboard')
   }
 
   async function deleteLead(id: string) {
