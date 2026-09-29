@@ -1202,10 +1202,29 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [authLoading, setAuthLoading] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [showAuth, setShowAuth] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
+
+useEffect(() => {
+  if (!showAuth) return
+
+  function handleEscape(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      setShowAuth(false)
+      setAuthError('')
+      setAuthMessage('')
+    }
+  }
+
+  window.addEventListener('keydown', handleEscape)
+
+  return () => {
+    window.removeEventListener('keydown', handleEscape)
+  }
+}, [showAuth])
 
   const [activePage, setActivePage] = useState('dashboard')
   const [leads, setLeads] = useState<Lead[]>([])
@@ -1384,12 +1403,15 @@ function App() {
             </div>
 
             <button
-              type="button"
-              onClick={() =>
-                setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
-              }
-              className="text-sm text-slate-300 hover:text-white"
-            >
+  type="button"
+  onClick={() => {
+    setAuthError('')
+    setAuthMessage('')
+    setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
+    setShowAuth(true)
+  }}
+  className="text-sm text-slate-300 hover:text-white"
+>
               {authMode === 'signin' ? 'Create account' : 'Sign in'}
             </button>
           </header>
@@ -1412,7 +1434,7 @@ function App() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => setAuthMode('signup')}
+                  onClick={() => { setAuthMode('signup'); setShowAuth(true) }}
                   className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-slate-100"
                 >
                   Get started
@@ -1420,7 +1442,7 @@ function App() {
 
                 <button
                   type="button"
-                  onClick={() => setAuthMode('signin')}
+                  onClick={() => { setAuthMode('signin'); setShowAuth(true) }}
                   className="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/5"
                 >
                   Sign in
@@ -1477,83 +1499,116 @@ function App() {
           </div>
         </div>
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-2xl">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold">
-                {authMode === 'signin' ? 'Welcome back' : 'Create your account'}
-              </h2>
+        {showAuth && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    onClick={() => {
+      setAuthError('')
+      setAuthMessage('')
+      setShowAuth(false)
+    }}
+  >
+    <div
+      className="w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold">
+            {authMode === 'signin'
+              ? 'Welcome back'
+              : 'Create your account'}
+          </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                {authMode === 'signin'
-                  ? 'Sign in to your FollowUp workspace.'
-                  : 'Start managing your follow-ups today.'}
-              </p>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-4">
-              {authError && (
-                <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {authError}
-                </div>
-              )}
-
-              {authMessage && (
-                <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {authMessage}
-                </div>
-              )}
-
-              <Input
-                label="Email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-
-              <Input
-                label="Password"
-                type="password"
-                autoComplete={
-                  authMode === 'signin' ? 'current-password' : 'new-password'
-                }
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <button
-                type="submit"
-                disabled={authLoading}
-                className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-              >
-                {authLoading
-                  ? 'Please wait...'
-                  : authMode === 'signin'
-                    ? 'Sign in'
-                    : 'Create account'}
-              </button>
-            </form>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAuthError('')
-                setAuthMessage('')
-                setAuthMode(
-                  authMode === 'signin' ? 'signup' : 'signin',
-                )
-              }}
-              className="mt-4 w-full text-center text-sm text-slate-500 hover:text-slate-900"
-            >
-              {authMode === 'signin'
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </button>
-          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            {authMode === 'signin'
+              ? 'Sign in to your FollowUp workspace.'
+              : 'Start managing your follow-ups today.'}
+          </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAuthError('')
+            setAuthMessage('')
+            setShowAuth(false)
+          }}
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <form onSubmit={handleAuth} className="space-y-4">
+        {authError && (
+          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            {authError}
+          </div>
+        )}
+
+        {authMessage && (
+          <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {authMessage}
+          </div>
+        )}
+
+        <Input
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          autoComplete={
+            authMode === 'signin'
+              ? 'current-password'
+              : 'new-password'
+          }
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button
+          type="submit"
+          disabled={authLoading}
+          className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+        >
+          {authLoading
+            ? 'Please wait...'
+            : authMode === 'signin'
+              ? 'Sign in'
+              : 'Create account'}
+        </button>
+      </form>
+
+      <button
+        type="button"
+        onClick={() => {
+          setAuthError('')
+          setAuthMessage('')
+          setAuthMode(
+            authMode === 'signin'
+              ? 'signup'
+              : 'signin',
+          )
+        }}
+        className="mt-4 w-full text-center text-sm text-slate-500 hover:text-slate-900"
+      >
+        {authMode === 'signin'
+          ? "Don't have an account? Sign up"
+          : 'Already have an account? Sign in'}
+      </button>
+    </div>
+  </div>
+)}
       </div>
     )
   }
